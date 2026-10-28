@@ -1,0 +1,56 @@
+{
+  "stage": "1-2 THz port",
+  "status": "single deterministic static-link check; not bidirectional or Monte Carlo",
+  "feedback_law": "unit",
+  "sample_period_s": 0.5,
+  "steps": 200,
+  "duration_s": 100.0,
+  "seed": 20261028,
+  "measurement_noise_sigma_db": 0.1,
+  "initial_error_h_v_deg": [
+    0.08431199999999993,
+    -0.08327999999999998
+  ],
+  "final_error_h_v_deg": [
+    0.0022475481357218784,
+    -0.004180845226060068
+  ],
+  "final_error_norm_deg": 0.004746676671804828,
+  "final_20_step_error_rms_deg": 0.007021742344812192,
+  "accepted_iekf_batches": 200,
+  "minimum_covariance_eigenvalue_over_run": 7.997972668980756e-06,
+  "p676_model": "ITU-R P.676-12 exact line-by-line via itur 0.4.0",
+  "measurement_jacobian_check": "central finite difference vs analytic PCHIP derivative",
+  "measurement_jacobian_max_abs_error": 2.2918040798458605e-09,
+  "p676_atmosphere": {
+    "pressure_hpa": 1013.25,
+    "temperature_k": 288.15,
+    "water_vapour_density_g_m3": 7.5
+  },
+  "stage1_link_budget": {
+    "samples_per_cut": 601.0,
+    "h_hpbw_deg": 0.7025999999999994,
+    "v_hpbw_deg": 0.8327999999999998,
+    "h_peak_dbi": 44.955,
+    "v_peak_dbi": 44.691,
+    "distance_m": 0.92,
+    "peak_received_power_dbm": 31.071718745558954,
+    "noise_power_dbm": -76.94428732430868,
+    "peak_snr_db": 108.01600606986763,
+    "fspl_db": 78.5719933852386,
+    "oxygen_attenuation_db": 1.420811467508277e-05,
+    "water_vapour_attenuation_db": 0.0022736610877782354,
+    "gaseous_attenuation_db": 0.002287869202453318,
+    "total_propagation_loss_db": 78.57428125444105,
+    "oxygen_specific_db_per_km": 0.015443602907698663,
+    "water_vapour_specific_db_per_km": 2.4713707475850386
+  },
+  "filter_state_order": [
+    "q_dbm",
+    "q_dot_db_s",
+    "e_H_deg",
+    "e_E_deg",
+    "omega_H_deg_s",
+    "omega_E_deg_s"
+  ]
+}

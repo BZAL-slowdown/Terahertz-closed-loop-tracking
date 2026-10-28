@@ -1,0 +1,19 @@
+{
+  "distance_m": 0.92,
+  "link_budget": {
+    "delta_pr_db": 24.28108298025748,
+    "gas_15m_db": 0.03730221525739105,
+    "sigma_crossing_m": 2090.299927132373
+  },
+  "terminal_rms_deg": {
+    "unit": 0.007021742344812192,
+    "pi": 0.03668265838597392,
+    "grad": 13.806919596446463
+  },
+  "static_result": {
+    "final_norm_deg": 0.012019430191169248,
+    "terminal_rms_deg": 0.007021742344812192,
+    "initial_norm_deg": 0.11850768643425617,
+    "running_rms_terminal_deg": 0.007133637293730938
+  }
+}
