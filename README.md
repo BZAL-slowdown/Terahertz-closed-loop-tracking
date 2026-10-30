@@ -37,19 +37,26 @@
 .
 ├── code/
 │   ├── stage1_2_thz.py                 # 阶段一二入口：方向图、链路预算、静态闭环
+│   ├── stage3_4_thz.py                 # 阶段三四入口：双向时分、被动标量、正交移动
 │   ├── stage1_2_figures.py             # 报告用图与诊断图（--only 选图）
 │   └── main_THZ_220GHz_deterministic_mechanical_tracking.py   # 220 GHz 建模底层库
 ├── data/
-│   └── LWB_CRS-220-100MM-2406-2.xlsx   # 实测 H/V 切面，各 601 点
+│   ├── LWB_CRS-220-100MM-2406-2.xlsx   # 实测 H/V 切面，各 601 点
+│   └── author_reference/               # 作者归档 Fig.8/Fig.10 MAT 数据（LED 基线）
 ├── outputs/
 │   ├── stage1_2_0.92m/                 # 摘要、逐拍 CSV、原始两图
 │   ├── stage1_2_15m/
-│   └── figures/                        # 报告插图（fig01/04/06/09）
+│   ├── stage3_4/                       # 双向/动态逐拍 CSV、摘要、四张结果图
+│   └── figures/                        # 阶段一二报告插图（fig01/04/06/09）
 ├── docs/
-│   ├── 220GHz_THz_stage1_2_report.docx # 结果报告（四页，四图两表）
-│   └── stage1_2_notes.md               # 参数与实现的文字说明
+│   ├── 220GHz_THz_stage1_2_report.docx # 阶段一二报告
+│   ├── 220GHz_THz_stage3_4_report.docx # 阶段三四报告（四图两表）
+│   ├── stage1_2_notes.md
+│   └── stage3_4_notes.md               # 时分、标量退化、变半径的文字版
 ├── tools/
-│   └── build_report.py                 # 由 outputs/figures 生成上面那份 docx
+│   ├── build_report.py                 # 阶段一二 docx
+│   ├── build_stage34_report.py         # 阶段三四 docx
+│   └── make_stage34_figures.py         # 半径脉冲、距离/速度对标、正交跟踪
 └── requirements.txt
 ```
 
@@ -76,6 +83,20 @@ python tools/build_report.py          # 可选，重新生成 docs 下的 docx
 `stage1_2_thz.py` 默认使用单位反馈（`--feedback unit`），得到上表结果。
 加 `--feedback pi` 可复现原来的 PI 闭环：终值 0.054°，但那是死区冻住积分形成的极限环，
 不是稳态；两者的差别在报告 3.3 节有说明。
+
+阶段三四：
+
+```
+python code/stage3_4_thz.py --mode static                  # 160 拍，双向交替 + 冻结断言
+python code/stage3_4_thz.py --mode dynamic --speed-factor 0.2   # 200 拍，正交移动
+python tools/make_stage34_figures.py                       # 四张结果图
+python tools/build_stage34_report.py                       # 阶段三四 docx
+```
+
+结果：静态两端末段 RMS 0.0079° / 0.0188°，被动冻结偏差 0（门限 1e-12）；
+动态 Rover / Elevator 末端 0.122° / 0.309°，距离 2.3000 → 2.3087 m。
+扫描半径不是照搬 LED 的 2°–5°，而是按半功率宽度换成 0.043°–0.084°，
+原因见 `docs/stage3_4_notes.md` 第 4 节。
 
 `stage1_2_figures.py` 的图号：
 `f01` 二维波束与扫描位置、`f02` 主瓣斜率、`f03` PCHIP 插值检查、`f04` 链路预算、
@@ -123,13 +144,15 @@ python tools/build_report.py          # 可选，重新生成 docs 下的 docx
 
 ## 已知限制
 
-- 只做了阶段一二：单端、静态视距。双向交替（TDD）、Passive 端的状态冻结与 `q` 标量传播、
-  移动平台跟踪都没有实现。主程序 `step()` 里两端滤波器每拍都 `predict`，非活跃端没有量测
-  却持续累积过程噪声，协方差只涨不消，这是阶段三四之前必须先补的部分。
+- 双向与移动跟踪是独立脚本 `stage3_4_thz.py`，还没有并回主仿真器；主程序 `step()` 里两端
+  滤波器每拍都 `predict`，非活跃端没有量测却累积过程噪声，协方差只涨不消。
+- 太赫兹侧只做了单次确定性的速度因子 0.2 样例，没有速度扫描和 Monte Carlo；
+  距离/速度的曲线来自作者 LED 归档数据，只作趋势对照。
 - 测量噪声 0.1 dB 是设定的标定/模型误差，不随距离变化，因此本仓库不能用来讨论测距对精度的影响。
 - 可分离近似忽略 H/V 交叉耦合；暗室只给了两条切面，这一点无法从数据上验证。
-- 扫描半径按平均 HPBW 统一取，没有按各轴斜率分别选择。V 面在 0.10–0.17° 的斜率只有 0.76 dB/deg，
-  这个取法对 V 轴不利。
+- 阶段一二的扫描半径按平均 HPBW 统一取，没有按各轴斜率分别选择。V 面在 0.10–0.17° 的
+  斜率只有 0.76 dB/deg，这个取法对 V 轴不利。
+- 被动期没有 IMU 辅助，4 秒盲区内的姿态变化只能靠冻结硬扛。
 
 ## 参考
 

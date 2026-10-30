@@ -1,0 +1,33 @@
+{
+  "mode": "dynamic",
+  "steps": 200,
+  "dt_s": 0.5,
+  "speed_factor": 0.2,
+  "distance_start_m": 2.3,
+  "distance_end_m": 2.3086792761230397,
+  "beam_scale": 0.02174787535410764,
+  "radius_range_deg": [
+    0.04349575070821528,
+    0.08444699999999995
+  ],
+  "initial_error_h_v_deg": [
+    0.1739830028328611,
+    -0.13048725212464585
+  ],
+  "frozen_assert_failures": 0,
+  "R1": {
+    "final_error_deg": 0.12172063925661188,
+    "tail10_error_rms_deg": 0.174277473800918,
+    "radius_final_deg": 0.08444699999999995,
+    "q_final_dbm": 26.08525323315834
+  },
+  "R2": {
+    "final_error_deg": 0.30949583698329886,
+    "tail10_error_rms_deg": 0.34833547618204336,
+    "radius_final_deg": 0.0,
+    "q_final_dbm": 20.72012230044583
+  },
+  "max_frozen_state_delta": 0.0,
+  "max_frozen_cov_delta": 0.0,
+  "active_samples": 200
+}
