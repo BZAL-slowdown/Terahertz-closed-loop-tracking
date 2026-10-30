@@ -1,8 +1,14 @@
-# 220 GHz 太赫兹跟瞄：阶段一二复现
+# 220 GHz 太赫兹跟瞄：阶段一至四复现
 
 把 LED 双向主动对准论文（Solanki & Tan, 2022）里的解析高斯光强面，换成 220 GHz 天线的实测方向图，
-并按 ITU-R P.676 计入氧气与水汽吸收，在这套信道上跑通六状态 IEKF 的静态视距闭环。
-仓库里是这一阶段的代码、实测数据、复现输出和结果报告。
+并按 ITU-R P.676 计入氧气与水汽吸收，在这套信道上验证六状态 IEKF、双向时分和移动跟踪。
+阶段一至四包含两条实现线：原有 Python 太赫兹仿真，以及新增的 MATLAB 阶段三四复现。两者参数和单次结果各自独立，文中不交叉引用指标。
+
+## 实现边界
+
+- **Python**：阶段一二链路和静态闭环、阶段三四时分及移动样例。运行方式和对应结果见下文原有章节。
+- **MATLAB**：`code/matlab_stage3_4/` 是基于手写 MATLAB 一二阶段滤波框架继续实现的阶段三四独立版本；复用实测方向图和作者归档 MAT 数据，但拥有单独的输出目录及汇报文档。
+- MATLAB 动态样例为固定种子单次测试，当前未收敛；不应拿它替换 Python 结果摘要或当作系统性能指标。
 
 ## 结果摘要
 
@@ -39,26 +45,32 @@
 │   ├── stage1_2_thz.py                 # 阶段一二入口：方向图、链路预算、静态闭环
 │   ├── stage3_4_thz.py                 # 阶段三四入口：双向时分、被动标量、正交移动
 │   ├── stage1_2_figures.py             # 报告用图与诊断图（--only 选图）
-│   └── main_THZ_220GHz_deterministic_mechanical_tracking.py   # 220 GHz 建模底层库
+│   ├── main_THZ_220GHz_deterministic_mechanical_tracking.py   # 220 GHz 建模底层库
+│   └── matlab_stage3_4/                 # MATLAB 阶段三四独立实现
 ├── data/
 │   ├── LWB_CRS-220-100MM-2406-2.xlsx   # 实测 H/V 切面，各 601 点
-│   └── author_reference/               # 作者归档 Fig.8/Fig.10 MAT 数据（LED 基线）
+│   ├── author_reference/               # Python 使用的作者归档数据
+│   └── author_reference_mat/           # MATLAB 使用的原始 MAT 归档
 ├── outputs/
 │   ├── stage1_2_0.92m/                 # 摘要、逐拍 CSV、原始两图
 │   ├── stage1_2_15m/
 │   ├── stage3_4/                       # 双向/动态逐拍 CSV、摘要、四张结果图
-│   └── figures/                        # 阶段一二报告插图（fig01/04/06/09）
+│   ├── figures/                         # 阶段一二报告插图（fig01/04/06/09）
+│   └── matlab_stage3_4/                 # MATLAB 独立结果：CSV 与 figures/
 ├── docs/
 │   ├── 220GHz_THz_stage1_2_report.docx # 阶段一二报告
 │   ├── 220GHz_THz_stage3_4_report.docx # 阶段三四报告（四图两表）
 │   ├── stage1_2_notes.md
-│   └── stage3_4_notes.md               # 时分、标量退化、变半径的文字版
+│   ├── stage3_4_notes.md               # Python 阶段三四说明
+│   └── matlab_stage3_4/                # MATLAB 技术说明、快照和汇报 Word
 ├── tools/
 │   ├── build_report.py                 # 阶段一二 docx
 │   ├── build_stage34_report.py         # 阶段三四 docx
 │   └── make_stage34_figures.py         # 半径脉冲、距离/速度对标、正交跟踪
 └── requirements.txt
 ```
+
+MATLAB 子项目的主要入口为 `code/matlab_stage3_4/run_thz_stage3_4.m`，函数文件与入口放在同一目录。
 
 ## 环境
 
@@ -70,6 +82,7 @@ pip install -r requirements.txt
 
 大气衰减用 `itur==0.4.0` 的 P.676-12 逐线实现，版本写在摘要 JSON 里，换版本会改变比衰减。
 读取 Excel 需要 `openpyxl`；生成报告需要 `python-docx`。
+MATLAB 复现使用 MATLAB R2023a（或兼容 `readtable`、`exportgraphics` 的版本），不依赖 Python 环境；Python 只用于生成 Word 汇报。
 
 ## 运行
 
@@ -104,6 +117,28 @@ python tools/build_stage34_report.py                       # 阶段三四 docx
 报告只用了 f01、f04、f06、f09；f07 较慢（25×25 网格），需要时单独跑。
 
 ## 输出说明
+
+### MATLAB 阶段三四
+
+在 MATLAB R2023a（需支持 `readtable`、`exportgraphics`）中，从仓库根目录运行：
+
+```matlab
+run(fullfile('code','matlab_stage3_4','run_thz_stage3_4.m'))
+```
+
+入口会执行两种半径策略（论文 2°–5° 和按实测 HPBW 缩放的 THz 半径），包括 160 拍静态时分验证、200 步动态测试及无前馈消融；随后重绘作者 Fig. 8/10 MAT 归档。所有 CSV 写入 `outputs/matlab_stage3_4/`，全部 PNG 写入 `outputs/matlab_stage3_4/figures/`。Passive 受保护状态和协方差项均需通过 `1e-12` 断言。
+
+固定种子动态单次结果（误差单位为度）：论文半径无前馈 Rover/Elevator 为 31.017/22.361，有前馈为 17.031/30.640；THz 半径无前馈为 20.632/19.386，有前馈为 25.794/14.492。四组均未收敛，且前馈对两端、两轴的影响并不一致。静态冻结最大偏差为 0。动态距离为 2.3000→2.3087 m。作者归档曲线属于原论文 LED 系统，不是本地 THz 动态实验。
+
+MATLAB Word 报告可用 Python 生成（依赖 `python-docx`）：
+
+```powershell
+python tools/build_matlab_stage34_report.py
+```
+
+输出文件为 `docs/matlab_stage3_4/220GHz太赫兹阶段三四融合复现汇报_适中篇幅版.docx`，报告中的图号与 `outputs/matlab_stage3_4/figures/fig01` 至 `fig10` 对应。
+
+`outputs/matlab_stage3_4/figures/legacy/` 仅保存整理前的重复图名，不作为报告主图；主结果固定使用 `fig01`–`fig10`。
 
 `outputs/stage1_2_*/stage1_2_summary.json`：参数、P.676 环境、链路预算、闭环指标、状态顺序。
 `stage2_static_iekf_data.csv` 逐拍一行，列的含义：
